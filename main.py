@@ -15,12 +15,17 @@ todaysData = requests.get('https://statsapi.web.nhl.com/api/v1/schedule?startDat
 jsonData = json.loads(todaysData)
 
 jsonData = jsonData['dates'][0]['games']
-
+ 
+gameInfo = {}
+ 
 for team in jsonData:
-    teamLiveFeed = team['link']
-    awayTeamList = team['teams']['away']['team']['name']
-    homeTeamList = team['teams']['home']['team']['name']
-    print('Away: ' + awayTeamList + ' Home: ' + homeTeamList + " Game Live Link: " + teamLiveFeed)
+    gameLiveFeed = 'https://statsapi.web.nhl.com' + team['link']
+    awayTeamName = team['teams']['away']['team']['name']
+    homeTeamName = team['teams']['home']['team']['name']
+    
+    gameInfo[gameLiveFeed] = {"Home": homeTeamName, "Away": awayTeamName}
+
+print(gameInfo)
     
 
 # print(todaysnumGames)
@@ -51,3 +56,12 @@ for team in jsonData:
 
 # client.create_tweet(text=msg, media_ids=[media_Id])
 # print("twweeteted")
+
+
+
+def add_keys_nested_dict(d, keys):
+    for key in keys:
+        if key not in d:
+            d[key] = {}
+        d = d[key]
+    d.setdefault(keys[-1], 1)
