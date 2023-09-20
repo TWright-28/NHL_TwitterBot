@@ -1,5 +1,0 @@
-consumer_key = 'knGiLvExc06EU7t7LJ5i6wNKt'
-consumer_secret = 'Z5kwD4KDs6qqJ4D3IQxmTlc3niEPFiZxXd34hC9vUUYQnyDcOQ'
-access_token = '1683182656337629184-lU1GmiqOE1rndzF3o3I3wav24Q30JM'
-access_token_secret = 'B3lBJ971oHCae8fIPCJQ9u5c1hvW1k2NsRiAvQOJmX0Bl'
-bearer_token = 'AAAAAAAAAAAAAAAAAAAAAAXmowEAAAAA0dPXaG%2FoUmV6fy0Oc3jcO2jmnPM%3D2rXbnjOv8ZY7Bwp1hfqye7sSXZLDProKheT5pILlxPNtd6wcal'
