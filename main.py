@@ -17,25 +17,11 @@ jsonData = json.loads(todaysData)
 jsonData = jsonData['dates'][0]['games']
 
 for team in jsonData:
-    teamList = team['teams']['away']['team']['name']
-    print(json.dumps(teamList, indent=4))
-
-    # for awayList in teamList:
-    #     awayLists = awayList['team']
-    #     for awayTeam in awayLists:
-    #         awayTeamDetail = awayTeam['team']
-    #         for awayTeamName in awayTeamDetail:
-    #             print(awayTeamName['name'])
+    teamLiveFeed = team['link']
+    awayTeamList = team['teams']['away']['team']['name']
+    homeTeamList = team['teams']['home']['team']['name']
+    print('Away: ' + awayTeamList + ' Home: ' + homeTeamList + " Game Live Link: " + teamLiveFeed)
     
-
-#   for awayTeam in teamList:
-#     awayTeamName = awayTeam['away']
-#     for awayTeamFinalname in awayTeamName:
-                
-
-
-
-
 
 # print(todaysnumGames)
 
