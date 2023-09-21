@@ -4,20 +4,24 @@ import requests
 import json
 from datetime import date
 import pandas as pd
+
+#GETTING TODAYS DATE
+
 #today = date.today()
 #today = today.strftime("%Y-%m-%d")
 
 today = '2018-01-02'
 
-
-print(today)
+#Using todays date, we will request the schedule data from the NHL undocumented API. 
 todaysData = requests.get('https://statsapi.web.nhl.com/api/v1/schedule?startDate=' + today + '&endDate=' + today).text
 jsonData = json.loads(todaysData)
 
+#Now we will clean the data a bit. 
 jsonData = jsonData['dates'][0]['games']
  
 gameInfo = {}
  
+#This loops through all the games today, will grab the live game link, the home team and the away team. It is then saved into a dictionary.
 for team in jsonData:
     gameLiveFeed = 'https://statsapi.web.nhl.com' + team['link']
     awayTeamName = team['teams']['away']['team']['name']
@@ -25,10 +29,12 @@ for team in jsonData:
     
     gameInfo[gameLiveFeed] = {"Home": homeTeamName, "Away": awayTeamName}
 
-print(gameInfo)
+# Now that we have a dictionary of the live games, lets access each game link and grab the stats from that game. 
+
+
     
 
-# print(todaysnumGames)
+####################### TWITTER STIFF ####################################
 
 # #V1 Endpoint 
 # auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
@@ -57,11 +63,3 @@ print(gameInfo)
 # client.create_tweet(text=msg, media_ids=[media_Id])
 # print("twweeteted")
 
-
-
-def add_keys_nested_dict(d, keys):
-    for key in keys:
-        if key not in d:
-            d[key] = {}
-        d = d[key]
-    d.setdefault(keys[-1], 1)
