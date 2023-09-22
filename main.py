@@ -41,8 +41,10 @@ for gameLink in gameInfo:
     homeplayerData = rawGameData['liveData']['boxscore']['teams']['home']['players']
     PlayerData = []
 
+    #looping though each playerId
     for player_id, player_info in awayplayerData.items():
         player_dict = {
+            "NHL_id" : player_id,
            "fullName": player_info["person"]["fullName"],
             "positionName": player_info["position"]["name"],
             "team" : rawGameData['liveData']['boxscore']['teams']['away']['team']['name'],
@@ -53,6 +55,7 @@ for gameLink in gameInfo:
     
     for player_id, player_info in homeplayerData.items():
         player_dict = {
+            "NHL_id" : player_id,
            "fullName": player_info["person"]["fullName"],
             "positionName": player_info["position"]["name"],
             "team" : rawGameData['liveData']['boxscore']['teams']['home']['team']['name'],
