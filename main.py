@@ -36,25 +36,36 @@ for gameLink in gameInfo:
     specGameData = requests.get(gameLink).text
     rawGameData = json.loads(specGameData)
     
-    playerData = rawGameData['liveData']['boxscore']['teams']['away']['players']
-       
-    player_data = []
+    #grabbing all player data from each gamee
+    awayplayerData = rawGameData['liveData']['boxscore']['teams']['away']['players']
+    homeplayerData = rawGameData['liveData']['boxscore']['teams']['home']['players']
+    PlayerData = []
 
-    for player_id, player_info in playerData.items():
+    for player_id, player_info in awayplayerData.items():
         player_dict = {
            "fullName": player_info["person"]["fullName"],
-            "positionName": player_info["position"]["name"]
+            "positionName": player_info["position"]["name"],
+            "team" : rawGameData['liveData']['boxscore']['teams']['away']['team']['name'],
         }
         skater_stats = player_info.get("stats", {}).get("skaterStats", {})
         player_dict.update(skater_stats)
-        player_data.append(player_dict)
+        PlayerData.append(player_dict)
+    
+    for player_id, player_info in homeplayerData.items():
+        player_dict = {
+           "fullName": player_info["person"]["fullName"],
+            "positionName": player_info["position"]["name"],
+            "team" : rawGameData['liveData']['boxscore']['teams']['home']['team']['name'],
+        }
+        skater_stats = player_info.get("stats", {}).get("skaterStats", {})
+        player_dict.update(skater_stats)
+        PlayerData.append(player_dict)
 
 # Create a DataFrame from the list of player dictionaries
-    df = pd.DataFrame(player_data)
+    df = pd.DataFrame(PlayerData)
     print(df)
     
-    #Now  that we have the game data, we want to grab each individual players statistics for the game. 
-    
+
     
     
     
