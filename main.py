@@ -29,11 +29,39 @@ for team in jsonData:
     
     gameInfo[gameLiveFeed] = {"Home": homeTeamName, "Away": awayTeamName}
 
+
 # Now that we have a dictionary of the live games, lets access each game link and grab the stats from that game. 
 
-
+for gameLink in gameInfo:
+    specGameData = requests.get(gameLink).text
+    rawGameData = json.loads(specGameData)
     
+    playerData = rawGameData['liveData']['boxscore']['teams']['away']['players']
+       
+    player_data = []
 
+    for player_id, player_info in playerData.items():
+        player_dict = {
+           "fullName": player_info["person"]["fullName"],
+            "positionName": player_info["position"]["name"]
+        }
+        skater_stats = player_info.get("stats", {}).get("skaterStats", {})
+        player_dict.update(skater_stats)
+        player_data.append(player_dict)
+
+# Create a DataFrame from the list of player dictionaries
+    df = pd.DataFrame(player_data)
+    print(df)
+    
+    #Now  that we have the game data, we want to grab each individual players statistics for the game. 
+    
+    
+    
+    
+    
+    
+    
+    
 ####################### TWITTER STIFF ####################################
 
 # #V1 Endpoint 
