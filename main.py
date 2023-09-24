@@ -79,8 +79,10 @@ for gameLink in gameInfo:
     df['weightedOffence'] = df.apply(lambda row: ((row.assists)*0.75 + (row.goals)*1 + (row.shots)*0.08 + (row.takeaways)*0.2 + (row.faceOffPct-50)/100), axis = 1)
     df['weightedDefence'] = df.apply(lambda row: ((row.giveaways)*(-0.5) + (row.faceOffPct-50)/100 + (row.takeaways)*0.2 + (row.blocked)*0.2 + (row.plusMinus)*0.5), axis = 1)
     df['Overall'] = df.apply(lambda row: ((row.weightedOffence) + (row.weightedDefence)), axis =1 )
-    display(df)
-    # df.plot(y="Overall", x="fullName", kind="scatter")
+    df = df.sort_values(by='Overall', ascending=False)
+    df.plot(y=["Overall" , "weightedOffence" , "weightedDefence"], x="fullName", kind="bar")
+    plt.savefig(gameLink[41:51] + '.pdf')
+
    
     
     
