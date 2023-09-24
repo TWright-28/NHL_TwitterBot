@@ -4,7 +4,10 @@ import requests
 import json
 from datetime import date
 import pandas as pd
-from pandas.plotting import radviz
+import seaborn as sns
+import numpy as np
+import os
+import matplotlib.pyplot as plt
 
 #GETTING TODAYS DATE
 
@@ -65,19 +68,20 @@ for gameLink in gameInfo:
         player_dict.update(skater_stats)
         PlayerData.append(player_dict)
 
-# Create a DataFrame from the list of player from the game 
+    # Create a DataFrame from the list of player from the game 
     df = pd.DataFrame(PlayerData)
-# Clean data now
-# Dropping rows(players) if their TOI is NaN, basically meaning they were a healthy scratch and wont have any statistics
+    # Clean data now
+    # Dropping rows(players) if their TOI is NaN, basically meaning they were a healthy scratch and wont have any statistics
     df = df[df['timeOnIce'].notna()]
     df['faceOffPct'].fillna(0, inplace = True)
-# Now we want to start to do some statstical analysis of the game stats.
+    # Now we want to start to do some statstical analysis of the game stats.
 
-    df['weightedOffence'] = df.apply(lambda row: ((row.assists)*0.75 + (row.goals)*1 + (row.shots)*0.08 + (row.takeaways)*0.2 + (row.faceOffPct-50)/100,), axis = 1)
+    df['weightedOffence'] = df.apply(lambda row: ((row.assists)*0.75 + (row.goals)*1 + (row.shots)*0.08 + (row.takeaways)*0.2 + (row.faceOffPct-50)/100), axis = 1)
     df['weightedDefence'] = df.apply(lambda row: ((row.giveaways)*(-0.5) + (row.faceOffPct-50)/100 + (row.takeaways)*0.2 + (row.blocked)*0.2 + (row.plusMinus)*0.5), axis = 1)
-    
-    print(df)   
-    
+    df['Overall'] = df.apply(lambda row: ((row.weightedOffence) + (row.weightedDefence)), axis =1 )
+    display(df)
+    # df.plot(y="Overall", x="fullName", kind="scatter")
+   
     
     
 ####################### TWITTER STIFF ####################################
