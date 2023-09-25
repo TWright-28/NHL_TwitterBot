@@ -8,6 +8,7 @@ import seaborn as sns
 import numpy as np
 import os
 import matplotlib.pyplot as plt
+from pandas.plotting import radviz
 
 #GETTING TODAYS DATE
 
@@ -42,7 +43,11 @@ for gameLink in gameInfo:
     
     #grabbing all player data from each gamee
     awayplayerData = rawGameData['liveData']['boxscore']['teams']['away']['players']
+    awayTeam = rawGameData['gameData']['teams']['away']['name']
+    awayTeamABV = rawGameData['gameData']['teams']['away']['abbreviation']
     homeplayerData = rawGameData['liveData']['boxscore']['teams']['home']['players']
+    homeTeam = rawGameData['gameData']['teams']['home']['name']
+    homeTeamABV = rawGameData['gameData']['teams']['home']['abbreviation']
     PlayerData = []
 
     #looping though each playerId
@@ -76,13 +81,18 @@ for gameLink in gameInfo:
     df['faceOffPct'].fillna(0, inplace = True)
     # Now we want to start to do some statstical analysis of the game stats.
 
-    df['weightedOffence'] = df.apply(lambda row: ((row.assists)*0.75 + (row.goals)*1 + (row.shots)*0.08 + (row.takeaways)*0.2 + (row.faceOffPct-50)/100), axis = 1)
-    df['weightedDefence'] = df.apply(lambda row: ((row.giveaways)*(-0.5) + (row.faceOffPct-50)/100 + (row.takeaways)*0.2 + (row.blocked)*0.2 + (row.plusMinus)*0.5), axis = 1)
+    df['Offence'] = df.apply(lambda row: ((row.assists)*0.75 + (row.goals)*1 + (row.shots)*0.08 + (row.takeaways)*0.2 + (row.faceOffPct-50)/100), axis = 1)
+    df['Defence'] = df.apply(lambda row: ((row.giveaways)*(-0.5) + (row.faceOffPct-50)/100 + (row.takeaways)*0.2 + (row.blocked)*0.2 + (row.plusMinus)*0.5), axis = 1)
     df['Overall'] = df.apply(lambda row: ((row.weightedOffence) + (row.weightedDefence)), axis =1 )
     df = df.sort_values(by='Overall', ascending=False)
-    df.plot(y=["Overall" , "weightedOffence" , "weightedDefence"], x="fullName", kind="bar")
-    plt.savefig(gameLink[41:51] + '.pdf')
-
+    dfteam1 = df.loc[df['team'] == awayTeam]
+    dfteam2 = df.loc[df['team'] == homeTeam]
+    dfteam1.plot(x=["Overall" , "weightedOffence" , "weightedDefence"], y="fullName", kind="bar")
+    plt.figure()
+    plt.savefig(gameLink[41:51] + '_' + awayTeamABV + '.pdf')
+    dfteam2.plot(x=["Overall" , "weightedOffence" , "weightedDefence"], y="fullName", kind="bar")
+    plt.savefig(gameLink[41:51] + '_' + homeTeamABV + '.pdf')
+    plt.close()
    
     
     
