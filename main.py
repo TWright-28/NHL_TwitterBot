@@ -9,7 +9,23 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 from pandas.plotting import radviz
+####################### TWITTER STIFF ####################################
 
+#V1 Endpoint 
+auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+auth.set_access_token(access_token, access_token_secret)
+api = tweepy.API(auth, wait_on_rate_limit=True)
+
+#V2 Endpoint
+
+client = tweepy.Client(
+    bearer_token,
+    consumer_key,
+    consumer_secret,
+    access_token,
+    access_token_secret,
+    wait_on_rate_limit=True
+)
 #GETTING TODAYS DATE
 
 # today = date.today()
@@ -81,47 +97,34 @@ for gameLink in gameInfo:
     df['faceOffPct'].fillna(0, inplace = True)
     # Now we want to start to do some statstical analysis of the game stats.
 
-    df['Offence'] = df.apply(lambda row: ((row.assists)*0.75 + (row.goals)*1 + (row.shots)*0.08 + (row.takeaways)*0.2 + (row.faceOffPct-50)/100), axis = 1)
+    df['Offence'] = df.apply(lambda row: ((row.assists)*0.75 + (row.goals)*1 + (row.shots)*0.08 + (row.takeaways)*0.2 ), axis = 1)
     df['Defence'] = df.apply(lambda row: ((row.giveaways)*(-0.5) + (row.faceOffPct-50)/100 + (row.takeaways)*0.2 + (row.blocked)*0.2 + (row.plusMinus)*0.5), axis = 1)
-    df['Overall'] = df.apply(lambda row: ((row.weightedOffence) + (row.weightedDefence)), axis =1 )
+    df['Overall'] = df.apply(lambda row: ((row.Offence) + (row.Defence)), axis =1 )
     df = df.sort_values(by='Overall', ascending=False)
+    
+    #Creating dataframes for each team and their players
     dfteam1 = df.loc[df['team'] == awayTeam]
     dfteam2 = df.loc[df['team'] == homeTeam]
-    dfteam1.plot(x=["Overall" , "weightedOffence" , "weightedDefence"], y="fullName", kind="bar")
-    plt.figure()
-    plt.savefig(gameLink[41:51] + '_' + awayTeamABV + '.pdf')
-    dfteam2.plot(x=["Overall" , "weightedOffence" , "weightedDefence"], y="fullName", kind="bar")
-    plt.savefig(gameLink[41:51] + '_' + homeTeamABV + '.pdf')
-    plt.close()
-   
     
+    #Now plotting each df
+
+    dfteam1.plot(y=["Overall" , "Offence" , "Defence"], x="fullName", kind="bar", title=awayTeam)
+    plt.tight_layout()
+    plt.savefig(gameLink[41:51] + '_' + awayTeamABV + '.jpg')
+    plt.cla()
     
-####################### TWITTER STIFF ####################################
+    dfteam2.plot(y=["Overall" , "Offence" , "Defence"], x="fullName", kind="bar", title = homeTeam)
+    plt.tight_layout()
+    plt.savefig(gameLink[41:51] + '_' + homeTeamABV + '.jpg')
+    plt.cla()
+    awayFile = gameLink[41:51] + "_" + awayTeamABV + ".jpg"
+    homeFile = gameLink[41:51] + "_" + homeTeamABV + ".jpg"
+    media_Id_Away = api.media_upload(filename=awayFile).media_id_string
+    media_Id_Home = api.media_upload(filename= homeFile).media_id_string
+    #description to be tweeted
+    msg = awayTeam + ' vs ' + homeTeam + ' Game Statistics:'
+    client.create_tweet(text=msg, media_ids=[media_Id_Away, media_Id_Home])
 
-# #V1 Endpoint 
-# auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-# auth.set_access_token(access_token, access_token_secret)
-# api = tweepy.API(auth, wait_on_rate_limit=True)
+#upload media to twtiite
 
-# #V2 Endpoint
-
-# client = tweepy.Client(
-#     bearer_token,
-#     consumer_key,
-#     consumer_secret,
-#     access_token,
-#     access_token_secret,
-#     wait_on_rate_limit=True
-# )
-
-# #upload media to twtiiter
-
-# media_Id = api.media_upload(filename="unnamed.jpg").media_id_string
-# print(media_Id)
-
-# #description to be tweeted
-# msg = "Test run"
-
-# client.create_tweet(text=msg, media_ids=[media_Id])
-# print("twweeteted")
 
