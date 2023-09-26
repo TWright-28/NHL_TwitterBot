@@ -1,7 +1,5 @@
 # NHL Game Data Analysis Twitter Bot
 
-![NHL Logo](https://brandslogo.net/wp-content/uploads/2015/07/nhl-logo-vector-download.jpg)
-
 ## Overview
 
 This Python bot is designed to analyze NHL game data, sourced from the undocumented NHL API, and generate analytical plots using Pandas and Matplotlib. The bot then automatically exports and posts these visualizations on Twitter using the Twitter API. This README provides an overview of the bot's functionality, usage instructions, and prerequisites.
