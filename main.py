@@ -4,8 +4,6 @@ import requests
 import json
 from datetime import date
 import pandas as pd
-import seaborn as sns
-import numpy as np
 import os
 import matplotlib.pyplot as plt
 
