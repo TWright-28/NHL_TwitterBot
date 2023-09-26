@@ -1,6 +1,6 @@
 # NHL Game Data Analysis Twitter Bot
 
-![NHL Logo](https://www.shermanreport.com/wp-content/uploads/2012/08/nhl-logo.jpg)
+![NHL Logo](https://brandslogo.net/wp-content/uploads/2015/07/nhl-logo-vector-download.jpg)
 
 ## Overview
 
