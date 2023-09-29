@@ -4,7 +4,7 @@ import requests
 import json
 from datetime import date
 import pandas as pd
-import os
+import os.path
 import matplotlib.pyplot as plt
 
 
@@ -54,74 +54,90 @@ for team in jsonData:
 for gameLink in gameInfo:
         specGameData = requests.get(gameLink).text
         rawGameData = json.loads(specGameData)
+        
         try:
-            #grabbing all player data from each gamee
-            awayplayerData = rawGameData['liveData']['boxscore']['teams']['away']['players']
-            awayTeam = rawGameData['gameData']['teams']['away']['name']
-            awayTeamABV = rawGameData['gameData']['teams']['away']['abbreviation']
-            homeplayerData = rawGameData['liveData']['boxscore']['teams']['home']['players']
-            homeTeam = rawGameData['gameData']['teams']['home']['name']
-            homeTeamABV = rawGameData['gameData']['teams']['home']['abbreviation']
-            PlayerData = []
-
-            #looping though each playerId
-            for player_id, player_info in awayplayerData.items():
-                player_dict = {
-                    "NHL_id" : player_id,
-                "fullName": player_info["person"]["fullName"],
-                    "positionName": player_info["position"]["name"],
-                    "team" : rawGameData['liveData']['boxscore']['teams']['away']['team']['name'],
-                }
-                skater_stats = player_info.get("stats", {}).get("skaterStats", {})
-                player_dict.update(skater_stats)
-                PlayerData.append(player_dict)
+            #grabbing all player data from each gamee         
+            gameStatus = rawGameData['gameData']['status']['abstractGameState']
+            if(gameStatus == "Final"):
             
-            for player_id, player_info in homeplayerData.items():
-                player_dict = {
-                    "NHL_id" : player_id,
-                "fullName": player_info["person"]["fullName"],
-                    "positionName": player_info["position"]["name"],
-                    "team" : rawGameData['liveData']['boxscore']['teams']['home']['team']['name'],
-                }
-                skater_stats = player_info.get("stats", {}).get("skaterStats", {})
-                player_dict.update(skater_stats)
-                PlayerData.append(player_dict)
+                awayplayerData = rawGameData['liveData']['boxscore']['teams']['away']['players']
+                awayTeam = rawGameData['gameData']['teams']['away']['name']
+                awayTeamABV = rawGameData['gameData']['teams']['away']['abbreviation']
+                homeplayerData = rawGameData['liveData']['boxscore']['teams']['home']['players']
+                homeTeam = rawGameData['gameData']['teams']['home']['name']
+                homeTeamABV = rawGameData['gameData']['teams']['home']['abbreviation']
+                
+                PlayerData = []
+                
+                awayFile = gameLink[41:51] + "_" + awayTeamABV + ".jpg"
+                homeFile = gameLink[41:51] + "_" + homeTeamABV + ".jpg"
+                
+                homeFile_exists = os.path.exists(homeFile)
+                awayFile_exists = os.path.exists(awayFile)
+                
+                if homeFile_exists == False & awayFile_exists == False:
 
-            # Create a DataFrame from the list of player from the game 
-            df = pd.DataFrame(PlayerData)
-            # Clean data now
-            # Dropping rows(players) if their TOI is NaN, basically meaning they were a healthy scratch and wont have any statistics
-            df = df[df['timeOnIce'].notna()]
-            df['faceOffPct'].fillna(0, inplace = True)
-            # Now we want to start to do some statstical analysis of the game stats.
+                    #looping though each playerId
+                    for player_id, player_info in awayplayerData.items():
+                        player_dict = {
+                            "NHL_id" : player_id,
+                            "fullName": player_info["person"]["fullName"],
+                            "positionName": player_info["position"]["name"],
+                            "team" : rawGameData['liveData']['boxscore']['teams']['away']['team']['name'],
+                        }
+                        skater_stats = player_info.get("stats", {}).get("skaterStats", {})
+                        player_dict.update(skater_stats)
+                        PlayerData.append(player_dict)
+                    
+                    for player_id, player_info in homeplayerData.items():
+                        player_dict = {
+                            "NHL_id" : player_id,
+                            "fullName": player_info["person"]["fullName"],
+                            "positionName": player_info["position"]["name"],
+                            "team" : rawGameData['liveData']['boxscore']['teams']['home']['team']['name'],
+                        }
+                        skater_stats = player_info.get("stats", {}).get("skaterStats", {})
+                        player_dict.update(skater_stats)
+                        PlayerData.append(player_dict)
 
-            df['Offence'] = df.apply(lambda row: ((row.assists)*0.75 + (row.goals)*1 + (row.shots)*0.08 + (row.takeaways)*0.2 ), axis = 1)
-            df['Defence'] = df.apply(lambda row: ((row.giveaways)*(-0.5) + (row.faceOffPct-50)/100 + (row.takeaways)*0.2 + (row.blocked)*0.2 + (row.plusMinus)*0.5), axis = 1)
-            df['Overall'] = df.apply(lambda row: ((row.Offence) + (row.Defence)), axis =1 )
-            df = df.sort_values(by='Overall', ascending=False)
-            
-            #Creating dataframes for each team and their players
-            dfteam1 = df.loc[df['team'] == awayTeam]
-            dfteam2 = df.loc[df['team'] == homeTeam]
-            
-            #Now plotting each df
+                    # Create a DataFrame from the list of player from the game 
+                    df = pd.DataFrame(PlayerData)
+                    # Clean data now
+                    # Dropping rows(players) if their TOI is NaN, basically meaning they were a healthy scratch and wont have any statistics
+                    df = df[df['timeOnIce'].notna()]
+                    df['faceOffPct'].fillna(0, inplace = True)
+                    # Now we want to start to do some statstical analysis of the game stats.
 
-            dfteam1.plot(y=["Overall" , "Offence" , "Defence"], x="fullName", kind="bar", title=awayTeam)
-            plt.tight_layout()
-            plt.savefig(gameLink[41:51] + '_' + awayTeamABV + '.jpg')
-            plt.cla()
-            
-            dfteam2.plot(y=["Overall" , "Offence" , "Defence"], x="fullName", kind="bar", title = homeTeam)
-            plt.tight_layout()
-            plt.savefig(gameLink[41:51] + '_' + homeTeamABV + '.jpg')
-            plt.cla()
-            awayFile = gameLink[41:51] + "_" + awayTeamABV + ".jpg"
-            homeFile = gameLink[41:51] + "_" + homeTeamABV + ".jpg"
-            media_Id_Away = api.media_upload(filename=awayFile).media_id_string
-            media_Id_Home = api.media_upload(filename= homeFile).media_id_string
-            #description to be tweeted
-            msg = today + ': ' + awayTeam + ' vs ' + homeTeam + ' Game Statistics:'
-            client.create_tweet(text=msg, media_ids=[media_Id_Away, media_Id_Home])
+                    df['Offence'] = df.apply(lambda row: ((row.assists)*0.75 + (row.goals)*1 + (row.shots)*0.08 + (row.takeaways)*0.2 ), axis = 1)
+                    df['Defence'] = df.apply(lambda row: ((row.giveaways)*(-0.5) + (row.faceOffPct-50)/100 + (row.takeaways)*0.2 + (row.blocked)*0.2 + (row.plusMinus)*0.5), axis = 1)
+                    df['Overall'] = df.apply(lambda row: ((row.Offence) + (row.Defence)), axis =1 )
+                    df = df.sort_values(by='Overall', ascending=False)
+                    
+                    #Creating dataframes for each team and their players
+                    dfteam1 = df.loc[df['team'] == awayTeam]
+                    dfteam2 = df.loc[df['team'] == homeTeam]
+                    
+                    #Now plotting each df
+
+                    dfteam1.plot(y=["Overall" , "Offence" , "Defence"], x="fullName", kind="bar", title=awayTeam)
+                    plt.tight_layout()
+                    plt.savefig(gameLink[41:51] + '_' + awayTeamABV + '.jpg')
+                    plt.cla()
+                    
+                    dfteam2.plot(y=["Overall" , "Offence" , "Defence"], x="fullName", kind="bar", title = homeTeam)
+                    plt.tight_layout()
+                    plt.savefig(gameLink[41:51] + '_' + homeTeamABV + '.jpg')
+                    plt.cla()
+                    awayFile = gameLink[41:51] + "_" + awayTeamABV + ".jpg"
+                    homeFile = gameLink[41:51] + "_" + homeTeamABV + ".jpg"
+                    media_Id_Away = api.media_upload(filename=awayFile).media_id_string
+                    media_Id_Home = api.media_upload(filename= homeFile).media_id_string
+                    #description to be tweeted
+                    msg = today + ': ' + awayTeam + ' vs ' + homeTeam + ' Game Statistics:'
+                    print(msg)
+                    client.create_tweet(text=msg, media_ids=[media_Id_Away, media_Id_Home])
+                else: 
+                    print("Alredy have the game scores for " + homeTeamABV + ' ' + awayTeamABV)
         except:
             print('Not enough Game Stats')
             
