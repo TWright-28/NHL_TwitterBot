@@ -6,6 +6,7 @@ from datetime import date
 import pandas as pd
 import os.path
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 ####################### TWITTER STIFF ####################################
@@ -26,10 +27,9 @@ client = tweepy.Client(
     )
     #GETTING TODAYS DATE
 
-today = date.today()
-today = today.strftime("%Y-%m-%d")
-
-# today = '2023-09-25'
+# today = date.today()
+# today = today.strftime("%Y-%m-%d")
+today = '2023-09-25'
 
     #Using todays date, we will request the schedule data from the NHL undocumented API. 
 # todaysData = requests.get('https://statsapi.web.nhl.com/api/v1/schedule?startDate=' + today + '&endDate=' + today).text
@@ -48,16 +48,40 @@ for games in jsonData:
     gameLiveFeed = 'https://api-web.nhle.com/v1/gamecenter/' + str(gameId) + '/boxscore'
     homeTeamName = games['homeTeam']['placeName']['default']
     awayTeamName = games['awayTeam']['placeName']['default']
+    
+    gameInfo[gameLiveFeed] = {"Home": homeTeamName, "Away": awayTeamName}
 
-    gameInfo[gameId] = {"Home": homeTeamName, "Away": awayTeamName}
-    print(gameInfo)
+# Now that we have a dictionary of the live games, lets access each game link and grab the stats from that game. 
 
+for gameLink in gameInfo:
+        specGameData = requests.get(gameLink).text
+        rawGameData = json.loads(specGameData)
 
-# #     # Now that we have a dictionary of the live games, lets access each game link and grab the stats from that game. 
+        try:         
+            gameStatus = rawGameData['gameState']
+            if(gameStatus == "FINAL"):
+        
+                awayForwardData = rawGameData['boxscore']['playerByGameStats']['awayTeam']['forwards']
+                awayDefenseData = rawGameData['boxscore']['playerByGameStats']['awayTeam']['defense']
+                awayTeamName = rawGameData['awayTeam']['name']['default']
+                awayTeamAbv = rawGameData['awayTeam']['abbrev']
+                awayList = awayForwardData + awayDefenseData
+                
+                homeForwardData = rawGameData['boxscore']['playerByGameStats']['homeTeam']['forwards']
+                homeDefenseData = rawGameData['boxscore']['playerByGameStats']['homeTeam']['defense']
+                homeTeamName = rawGameData['homeTeam']['name']['default']
+                homeTeamAbv = rawGameData['homeTeam']['abbrev']
+                homeList = homeForwardData + homeDefenseData
+                
+                playerData = []
+                
+                awayFile = gameLink[39:49] + "_" + awayTeamAbv + ".jpg"
+                homeFile = gameLink[39:49] + "_" + homeTeamAbv + ".jpg"
 
-# for gameLink in gameInfo:
-#         specGameData = requests.get(gameLink).text
-#         rawGameData = json.loads(specGameData)
+                print(homeFile)
+        except:
+            print("not enough data")
+        
         
 #         try:
 #             #grabbing all player data from each gamee         
