@@ -39,7 +39,7 @@ jsonData = json.loads(todaysData)
 
     #Now we will clean the data a bit. 
 jsonData = jsonData['gameWeek'][0]['games']
-print(jsonData)
+
 gameInfo = {}
     
 # #     #This loops through all the games today, will grab the live game link, the home team and the away team. It is then saved into a dictionary.
@@ -60,7 +60,8 @@ for gameLink in gameInfo:
         try:         
             gameStatus = rawGameData['gameState']
             if(gameStatus == "FINAL"):
-        
+                
+                # Pulling skater data from the GameLink Boxscore
                 awayForwardData = rawGameData['boxscore']['playerByGameStats']['awayTeam']['forwards']
                 awayDefenseData = rawGameData['boxscore']['playerByGameStats']['awayTeam']['defense']
                 awayTeamName = rawGameData['awayTeam']['name']['default']
@@ -73,15 +74,31 @@ for gameLink in gameInfo:
                 homeTeamAbv = rawGameData['homeTeam']['abbrev']
                 homeList = homeForwardData + homeDefenseData
                 
-                playerData = []
+                PlayerData = []
                 
+                #Creatomg the name for game JPG
                 awayFile = gameLink[39:49] + "_" + awayTeamAbv + ".jpg"
                 homeFile = gameLink[39:49] + "_" + homeTeamAbv + ".jpg"
+                
+                #Checking if the file already exists
+                homeFile_exists = os.path.exists(homeFile)
+                awayFile_exists = os.path.exists(awayFile)
+                
+                print(homeList)
+                #cont if neither of the files exist
+                if homeFile_exists == False & awayFile_exists == False:
+                    for player in awayList:
+                        player_dict = {
+                            "NHL_id" : player['playerId'],
+                            "name" : player['playerId'],
+                            "NHL_id" : player['playerId'],
+                        }
 
-                print(homeFile)
+                    # Get player info for away team
+    
+
         except:
             print("not enough data")
-        
         
 #         try:
 #             #grabbing all player data from each gamee         
