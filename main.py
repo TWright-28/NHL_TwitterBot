@@ -32,7 +32,9 @@ today = today.strftime("%Y-%m-%d")
 # today = '2023-09-25'
 
     #Using todays date, we will request the schedule data from the NHL undocumented API. 
+# todaysData = requests.get('https://statsapi.web.nhl.com/api/v1/schedule?startDate=' + today + '&endDate=' + today).text
 todaysData = requests.get('https://statsapi.web.nhl.com/api/v1/schedule?startDate=' + today + '&endDate=' + today).text
+
 jsonData = json.loads(todaysData)
 
     #Now we will clean the data a bit. 
