@@ -33,18 +33,22 @@ def get_winning_goalie(gameId):
     for week in jsonDataRaw['gameWeek']:
         # Loop through games in each week
         for game in week['games']:
+            print("///////////////////////////////////////////////////////////////////////")
+            print(gameId)
+            print(game)
             # Check if gameId matches
             if game['id'] == gameId:
                 # Return winning goalie
-                return game['winningGoalie']['lastName']['default']
+                return game['winningGoalie']['playerId']
+            
 
 
 
 # today = date.today()
 # today = today.strftime("%Y-%m-%d")
-today = '2023-09-25'
+today = '2024-02-12'
 
-    #Using todays date, we will request the schedule data from the NHL undocumented API. 
+#Using todays date, we will request the schedule data from the NHL undocumented API. 
 # todaysData = requests.get('https://statsapi.web.nhl.com/api/v1/schedule?startDate=' + today + '&endDate=' + today).text
 todaysData = requests.get('https://api-web.nhle.com/v1/schedule/' + today).text
 
@@ -72,7 +76,7 @@ for gameLink in gameInfo:
 
         try:         
             gameStatus = rawGameData['gameState']
-            if(gameStatus == "FINAL"):
+            if(gameStatus == "FINAL" or gameStatus == "OFF"):
                 
                 winning_goalie = get_winning_goalie(gameLink[39:49])
                 
@@ -178,9 +182,6 @@ for gameLink in gameInfo:
                     df_player['Overall'] = df_player.apply(lambda row: ((row.Offence) + (row.MicroStats)), axis =1 )
                     # df_goalie = df_goalie.apply(lambda row: ((row.goalsAgainst)*(-3) + (row.saveShotsAgainst.split('/')[0])*0.6 ))
                     # df = df.sort_values(by='Overall', ascending=False)
-                      
-    
-
         except:
             print("not enough data")
 
