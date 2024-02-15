@@ -27,6 +27,19 @@ client = tweepy.Client(
     )
     #GETTING TODAYS DATE
 
+
+def get_winning_goalie(gameId):
+    # Loop through gameWeeks
+    for week in jsonDataRaw['gameWeek']:
+        # Loop through games in each week
+        for game in week['games']:
+            # Check if gameId matches
+            if game['id'] == gameId:
+                # Return winning goalie
+                return game['winningGoalie']['lastName']['default']
+
+
+
 # today = date.today()
 # today = today.strftime("%Y-%m-%d")
 today = '2023-09-25'
@@ -35,10 +48,10 @@ today = '2023-09-25'
 # todaysData = requests.get('https://statsapi.web.nhl.com/api/v1/schedule?startDate=' + today + '&endDate=' + today).text
 todaysData = requests.get('https://api-web.nhle.com/v1/schedule/' + today).text
 
-jsonData = json.loads(todaysData)
+jsonDataRaw = json.loads(todaysData)
 
     #Now we will clean the data a bit. 
-jsonData = jsonData['gameWeek'][0]['games']
+jsonData = jsonDataRaw['gameWeek'][0]['games']
 
 gameInfo = {}
     
@@ -61,20 +74,25 @@ for gameLink in gameInfo:
             gameStatus = rawGameData['gameState']
             if(gameStatus == "FINAL"):
                 
+                winning_goalie = get_winning_goalie(gameLink[39:49])
+                
                 # Pulling skater data from the GameLink Boxscore
                 awayForwardData = rawGameData['boxscore']['playerByGameStats']['awayTeam']['forwards']
                 awayDefenseData = rawGameData['boxscore']['playerByGameStats']['awayTeam']['defense']
                 awayTeamName = rawGameData['awayTeam']['name']['default']
                 awayTeamAbv = rawGameData['awayTeam']['abbrev']
-                awayList = awayForwardData + awayDefenseData
+                awayGoalieData = rawGameData['boxscore']['playerByGameStats']['awayTeam']['goalies']
+                awayPlayerList = awayForwardData + awayDefenseData
                 
                 homeForwardData = rawGameData['boxscore']['playerByGameStats']['homeTeam']['forwards']
                 homeDefenseData = rawGameData['boxscore']['playerByGameStats']['homeTeam']['defense']
                 homeTeamName = rawGameData['homeTeam']['name']['default']
                 homeTeamAbv = rawGameData['homeTeam']['abbrev']
-                homeList = homeForwardData + homeDefenseData
+                homeGoalieData = rawGameData['boxscore']['playerByGameStats']['homeTeam']['goalies']
+                homePlayerList = homeForwardData + homeDefenseData
                 
                 PlayerData = []
+                GoalieData = []
                 
                 #Creatomg the name for game JPG
                 awayFile = gameLink[39:49] + "_" + awayTeamAbv + ".jpg"
@@ -84,22 +102,90 @@ for gameLink in gameInfo:
                 homeFile_exists = os.path.exists(homeFile)
                 awayFile_exists = os.path.exists(awayFile)
                 
-                print(homeList)
+                # print(homeList)
                 #cont if neither of the files exist
                 if homeFile_exists == False & awayFile_exists == False:
-                    for player in awayList:
+                    for player in awayPlayerList:
                         player_dict = {
                             "NHL_id" : player['playerId'],
-                            "name" : player['playerId'],
-                            "NHL_id" : player['playerId'],
+                            "name" : player['name']['default'],
+                            "team" : awayTeamName,
+                            "position": player['position'],
+                            "toi": player['toi'],
+                            "goals": player['goals'],
+                            "assists": player['assists'],
+                            "points": player['points'],
+                            "powerPlayPoints": player['powerPlayPoints'],
+                            "shots": player['shots'],
+                            "plusMinus": player['plusMinus'],
+                            "pim": player['pim'],
+                            "hits": player['hits'],
+                            "blocks": player['blockedShots'],
                         }
+                        PlayerData.append(player_dict)
+                    
+                    for player in homePlayerList:
+                        player_dict = {
+                            "NHL_id" : player['playerId'],
+                            "name" : player['name']['default'],
+                            "team" : homeTeamName,
+                            "position": player['position'],
+                            "toi": player['toi'],
+                            "goals": player['goals'],
+                            "assists": player['assists'],
+                            "points": player['points'],
+                            "powerPlayPoints": player['powerPlayPoints'],
+                            "shots": player['shots'],
+                            "plusMinus": player['plusMinus'],
+                            "pim": player['pim'],
+                            "hits": player['hits'],
+                            "blocks": player['blockedShots'],
+                        }
+                        PlayerData.append(player_dict)
 
-                    # Get player info for away team
+                    for goalie in awayGoalieData:
+                        goalie_dict = {
+                            "NHL_id" : goalie['playerId'],
+                            "team": awayTeamName,
+                            "goalsAgaints" : goalie['goalsAgainst'],
+                            "toi": goalie['toi'],
+                            "goalsAgainst": goalie['goalsAgainst'],
+                            "saveShotsAgainst": goalie['saveShotsAgainst'],
+                        }
+                        GoalieData.append(goalie_dict)
+                        
+                    for goalie in homeGoalieData:
+                        goalie_dict = {
+                            "NHL_id" : goalie['playerId'],
+                            "team": homeTeamName,
+                            "goalsAgaints" : goalie['goalsAgainst'],
+                            "toi": goalie['toi'],
+                            "goalsAgainst": goalie['goalsAgainst'],
+                            "saveShotsAgainst": goalie['saveShotsAgainst'],
+                        }
+                        GoalieData.append(goalie_dict)
+                        
+                 # Create a DataFrame from the list of player from the game 
+                    df_player = pd.DataFrame(PlayerData)
+                    df_goalie = pd.DataFrame(GoalieData)
+#                     # Clean data now
+#                     # Dropping rows(players) if their TOI is NaN, basically meaning they were a healthy scratch and wont have any statistics
+                    df_player = df_player[df_player['toi'].notna()]
+                    df_goalie = df_goalie[df_goalie['toi'].notna()]
+                    
+                    df_player['Offence'] = df_player.apply(lambda row: ((row.assists)*4 + (row.goals)*6), axis = 1)
+                    df_player['MicroStats'] = df_player.apply(lambda row: ((row.hits)*1 + (row.blocks)*1 + (row.plusMinus)*0.5 + (row.shots)*0.9 + (row.pim)*0.5) + (row.powerPlayPoints)*2, axis = 1)
+                    df_player['Overall'] = df_player.apply(lambda row: ((row.Offence) + (row.MicroStats)), axis =1 )
+                    # df_goalie = df_goalie.apply(lambda row: ((row.goalsAgainst)*(-3) + (row.saveShotsAgainst.split('/')[0])*0.6 ))
+                    # df = df.sort_values(by='Overall', ascending=False)
+                      
     
 
         except:
             print("not enough data")
-        
+
+            
+
 #         try:
 #             #grabbing all player data from each gamee         
 #             gameStatus = rawGameData['gameData']['status']['abstractGameState']
